@@ -69,12 +69,6 @@ int main(char *argv[], int argc)
         printf ("Not enough memory to read file segment");
         return (0);
     }
-    if (strcmp (argv[argnr],"/D")==0 || strcmp (argv[argnr],"/d")==0)
-    {
-        debug=1;
-        find_flash (debug);
-        return (0);
-    }
     if (strcmp (argv[0],"/S0")==0 || strcmp (argv[0],"/s0")==0) {
         slot = 0;argnr++;
     } 
@@ -87,6 +81,7 @@ int main(char *argv[], int argc)
     if (strcmp (argv[0],"/S3")==0 || strcmp (argv[0],"/s3")==0) {
         slot = 3;argnr++;
     }
+    if (strcmp (argv[argnr],"/D")==0 || strcmp (argv[argnr],"/d")==0) debug=1;
     if (argnr==0)
     {   
         if (!((slot = find_flash (debug))<4))
@@ -96,7 +91,6 @@ int main(char *argv[], int argc)
         } 
     }
     printf ("Found flash in slot: %d\r\n",slot);
-    printf ("\r\n");
     if (strcmp (argv[argnr],"/T")==0 || strcmp (argv[argnr],"/t")==0)
     {
         do_tests (slot);
@@ -107,6 +101,8 @@ int main(char *argv[], int argc)
         erase_flash (slot);
         return (0);
     }
+    if (debug) return (0);
+    printf ("\r\n");
     FCB fcb;
     FT_SetName (&fcb,argv[argnr]);
     if(fcb_open( &fcb ) != FCB_SUCCESS) 
@@ -132,10 +128,10 @@ int main(char *argv[], int argc)
         bytes_read = fcb_read( &fcb, file_segment,SEGMENT_SIZE);
         if (bytes_read<SEGMENT_SIZE)
             not_ready=FALSE;
-        printf ("%d bytes, segment %d ",bytes_read,segmentnr);
+        printf ("%d bytes, segment %d    ",bytes_read,segmentnr);
         if (!write_flash_segment (slot,segmentnr))
             break;
-        printf("  \r");
+        printf("\r");
         segmentnr++;
     }
     fcb_close (&fcb);
@@ -164,7 +160,7 @@ void select_slot_40 (uint8_t slot)
     add iy,sp
     ld a,(iy)
     ld h,#0x40
-    call 0x24
+    jp 0x24
     __endasm;
 }
 
@@ -298,12 +294,14 @@ BOOL erase_flash_sectors (uint8_t slot,uint8_t sector_start,uint8_t sector_end)
             break;   
         }
     }
-    printf ("done.\r\n");
     select_ramslot_40 ();
-    if (i<sector_start)
+    if (i<sector_end)
         return FALSE;
     else
+    {
+        printf ("done.\r\n");
         return TRUE;
+    }
 }
 
 BOOL flash_command_okay (uint16_t address,uint8_t expected_value)
@@ -322,7 +320,7 @@ BOOL flash_command_okay (uint16_t address,uint8_t expected_value)
         return TRUE;
     else
     {
-        printf ("=> address: %x, value: %x, response: %x\r\n",address,expected_value,value);
+        printf ("\b\b\b=> address: %x, value: %x, response: %x\r\n",address,expected_value,value);
         return FALSE;
     }
 }
