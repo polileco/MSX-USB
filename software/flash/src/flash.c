@@ -90,7 +90,12 @@ int main(char *argv[], int argc)
             return (0);
         } 
     }
+    if (debug) printf ("\r\n");
     printf ("Found flash in slot: %d\r\n",slot);
+    if (debug)
+        return (0);
+    else
+        printf ("\r\n");
     if (strcmp (argv[argnr],"/T")==0 || strcmp (argv[argnr],"/t")==0)
     {
         do_tests (slot);
@@ -101,8 +106,6 @@ int main(char *argv[], int argc)
         erase_flash (slot);
         return (0);
     }
-    if (debug) return (0);
-    printf ("\r\n");
     FCB fcb;
     FT_SetName (&fcb,argv[argnr]);
     if(fcb_open( &fcb ) != FCB_SUCCESS) 
